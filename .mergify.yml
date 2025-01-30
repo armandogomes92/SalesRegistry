@@ -1,0 +1,13 @@
+pull_request_rules:
+  - name: Automatic merge após aprovação e checks passarem
+    conditions:
+      - "status-success=build"
+      - "approved-reviews-by>=1"
+      - "check-success=build"
+      - "check-success=test"
+      - "check-success=lint"
+      - "label=ready-to-merge"
+    actions:
+      merge:
+        method: merge
+        commit_message: "Merge pull request"
