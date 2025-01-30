@@ -1,7 +1,4 @@
-# This workflow will build a .NET project
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
-
-name: .NET
+name: .NETCore
 
 on:
   push:
@@ -18,9 +15,11 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
+      - name: Change directory to solution folder
+        run: cd SalesRegistry/src
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore Ambev.DeveloperEvaluation.sln
       - name: Build
-        run: dotnet build --no-restore
+        run: dotnet build Ambev.DeveloperEvaluation.sln --no-restore
       - name: Test
-        run: dotnet test --no-build --verbosity normal
+        run: dotnet test Ambev.DeveloperEvaluation.sln --no-build --verbosity normal
