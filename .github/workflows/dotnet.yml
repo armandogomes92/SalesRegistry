@@ -1,4 +1,4 @@
-name: .NETCore
+name: .NET
 
 on:
   push:
@@ -15,11 +15,9 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-      - name: Change directory to solution folder
-        run: ls
       - name: Restore dependencies
-        run: dotnet restore Ambev.DeveloperEvaluation.sln
+        run: dotnet restore ./Ambev.DeveloperEvaluation.sln
       - name: Build
-        run: dotnet build Ambev.DeveloperEvaluation.sln --no-restore
+        run: dotnet build ./Ambev.DeveloperEvaluation.sln --no-restore
       - name: Test
-        run: dotnet test Ambev.DeveloperEvaluation.sln --no-build --verbosity normal
+        run: dotnet test ./Ambev.DeveloperEvaluation.sln --no-build --verbosity normal
