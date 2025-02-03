@@ -2,6 +2,6 @@
 {
     public class UpdateSaleResponse
     {
-        public Guid Id { get; set; }
+        public bool IsUpdated { get; set; }
     }
 }

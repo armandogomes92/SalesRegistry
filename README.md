@@ -1,86 +1,109 @@
-# Projeto de Avaliação de Desenvolvedor
+# Sales Registry API
 
-`LEIA COM ATENÇÃO`
+## Project Overview
+The Sales Registry is a RESTful API developed to manage sales records. The system allows the registration, querying, and updating of sales, with support for multiple items per sale.
 
-## Instruções
-**O teste abaixo terá até 7 dias corridos para ser entregue a partir da data de recebimento deste manual.**
+### Technologies Used
+- .NET 8.0
+- ASP.NET Core Web API
+- Entity Framework Core
+- AutoMapper
+- xUnit
+- FluentAssertions
+- Swagger/OpenAPI
 
-- O código deve ser versionado em um repositório público no Github e um link deve ser enviado para avaliação após a conclusão
-- Faça o upload deste template para o seu repositório e comece a trabalhar a partir dele
-- Leia as instruções com atenção e certifique-se de que todos os requisitos estão sendo atendidos
-- O repositório deve fornecer instruções sobre como configurar, executar e testar o projeto
-- Documentação e organização geral também serão levadas em consideração
+## Environment Setup
 
-## Caso de Uso
-**Você é um desenvolvedor na equipe DeveloperStore. Agora precisamos implementar os protótipos da API.**
+### Prerequisites
+- .NET 8.0 SDK or higher
+- Visual Studio 2022 or VS Code
+- PostgreSQL 13 with appsettings user or configure a user as shown below
 
-Como trabalhamos com `DDD`, para referenciar entidades de outros domínios, usamos o padrão `Identidades Externas` com desnormalização das descrições das entidades.
+### `appsettings.json` Configuration
 
-Portanto, você escreverá uma API (CRUD completo) que lida com registros de vendas. A API precisa ser capaz de informar:
+In the `appsettings.json` file, configure the PostgreSQL connection string:
 
-* Número da venda
-* Data em que a venda foi realizada
-* Cliente
-* Valor total da venda
-* Filial onde a venda foi realizada
-* Produtos
-* Quantidades
-* Preços unitários
-* Descontos
-* Valor total de cada item
-* Cancelado/Não Cancelado
+```json
+{
+   "ConnectionStrings": {
+      "DefaultConnection": "Host=localhost;Database=SalesRegistry;Username=your_user;Password=your_password"
+   },
+   "Logging": {
+      "LogLevel": {
+         "Default": "Information",
+         "Microsoft": "Warning",
+         "Microsoft.Hosting.Lifetime": "Information"
+      }
+   },
+   "AllowedHosts": "*"
+}
+```
 
-Não é obrigatório, mas seria um diferencial construir código para publicar eventos de:
-* VendaCriada
-* VendaModificada
-* VendaCancelada
-* ItemCancelado
+Replace `your_user` and `your_password` with your PostgreSQL database credentials.
 
-Se você escrever o código, **não é necessário** realmente publicar para qualquer Message Broker. Você pode registrar uma mensagem no log da aplicação ou da maneira que achar mais conveniente.
+### Initial Setup
+1. Clone the repository
+```bash
+git clone https://github.com/armandogomes92/SalesRegistry.git
+cd SalesRegistry
+```
 
-### Regras de Negócio
+2. Restore NuGet packages
+```bash
+dotnet restore
+```
 
-* Compras acima de 4 itens idênticos têm 10% de desconto
-* Compras entre 10 e 20 itens idênticos têm 20% de desconto
-* Não é possível vender acima de 20 itens idênticos
-* Compras abaixo de 4 itens não podem ter desconto
+3. Configure the connection string in `appsettings.json`
 
-Essas regras de negócios definem níveis de desconto baseados na quantidade e limitações:
+## Running the Project
 
-1. Níveis de Desconto:
-   - 4+ itens: 10% de desconto
-   - 10-20 itens: 20% de desconto
+### Build
+```bash
+dotnet build
+```
 
-2. Restrições:
-   - Limite máximo: 20 itens por produto
-   - Nenhum desconto permitido para quantidades abaixo de 4 itens
+### Running the API
+```bash
+cd src/Ambev.DeveloperEvaluation.WebApi
+dotnet run
+```
 
-## Visão Geral
-Esta seção fornece uma visão geral do projeto e das várias habilidades e competências que ele visa avaliar em candidatos a desenvolvedor.
+The API will be available at `https://localhost:5001`
 
-Veja [Visão Geral](./overview.md)
+## Tests
 
-## Pilha de Tecnologia
-Esta seção lista as principais tecnologias usadas no projeto, incluindo os componentes de backend, testes, frontend e banco de dados.
+### Running Unit Tests
+```bash
+cd tests/Ambev.DeveloperEvaluation.Unit
+dotnet test
+```
 
-Veja [Pilha de Tecnologia](./tech-stack.md)
+### Running Functional Tests
+```bash
+cd tests/Ambev.DeveloperEvaluation.Functional
+dotnet test
+```
 
-## Frameworks
-Esta seção descreve os frameworks e bibliotecas que são utilizados no projeto para aumentar a produtividade do desenvolvimento e a manutenibilidade.
+## Project Structure
 
-Veja [Frameworks](./frameworks.md)
+```
+src/
+â”œâ”€â”€ Ambev.DeveloperEvaluation.WebApi/        # API endpoints and controllers
+â”œâ”€â”€ Ambev.DeveloperEvaluation.Application/   # Application logic and handlers
+â”œâ”€â”€ Ambev.DeveloperEvaluation.Domain/        # Entities and business rules
+â”œâ”€â”€ Ambev.DeveloperEvaluation.Infrastructure/# Data access and external services
+â””â”€â”€ Ambev.DeveloperEvaluation.IoC/          # Dependency injection configuration
 
-<!-- 
-## Estrutura da API
-Esta seção inclui links para a documentação detalhada dos diferentes recursos da API:
-- [API Geral](./general-api.md)
-- [Produtos API](./products-api.md)
-- [Carrinhos API](./carts-api.md)
-- [Usuários API](./users-api.md)
-- [Autenticação API](./auth-api.md)
--->
+tests/
+â”œâ”€â”€ Ambev.DeveloperEvaluation.Unit/          # Unit tests
+â””â”€â”€ Ambev.DeveloperEvaluation.Functional/    # Functional tests
+```
 
-## Estrutura do Projeto
-Esta seção descreve a estrutura geral e a organização dos arquivos e diretórios do projeto.
+### Main Features
+- `SalesController`: Sales management endpoints
+- `GetSale`: Sales query functionality
+- `CreateSale`: Sales creation functionality
+- `UpdateSale`: Sales update functionality
 
-Veja [Estrutura do Projeto](./project-structure.md)
+## License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

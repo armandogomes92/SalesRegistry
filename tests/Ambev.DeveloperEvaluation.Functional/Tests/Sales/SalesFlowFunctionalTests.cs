@@ -5,10 +5,13 @@ using Bogus;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
-using Ambev.DeveloperEvaluation.Application.Sales.GetSale.ById;
+using Ambev.DeveloperEvaluation.Application.Sales.GetSale;
 using Ambev.DeveloperEvaluation.Application.Dtos;
 using Ambev.DeveloperEvaluation.Domain.Repositories;
 using Ambev.DeveloperEvaluation.Domain.Entities;
+using NSubstitute.ReceivedExtensions;
+using Ambev.DeveloperEvaluation.Application.Events.Handlers;
+using Microsoft.Extensions.Logging;
 
 namespace Ambev.DeveloperEvaluation.Functional.Tests.Sales
 {
@@ -20,19 +23,23 @@ namespace Ambev.DeveloperEvaluation.Functional.Tests.Sales
         public SalesFlowFunctionalTests()
         {
             var services = new ServiceCollection();
-            
+
             services.AddAutoMapper(typeof(CreateSaleProfile).Assembly);
-            
-            services.AddMediatR(cfg => {
+
+            services.AddMediatR(cfg =>
+            {
                 cfg.RegisterServicesFromAssembly(typeof(CreateSaleCommand).Assembly);
             });
-            
-            services.AddScoped<ISaleRepository>(sp => 
+
+            services.AddScoped<ISaleRepository>(sp =>
                 NSubstitute.Substitute.For<ISaleRepository>());
-            
+
             services.AddScoped<CreateSaleHandler>();
-            services.AddScoped<GetSaleByIdHandler>();
-            
+            services.AddScoped<GetSaleHandler>();
+
+            services.AddLogging(configure => configure.AddConsole())
+                    .AddTransient<SaleEventHandler>();
+
             _serviceProvider = services.BuildServiceProvider();
             _faker = new Faker();
         }
@@ -73,8 +80,8 @@ namespace Ambev.DeveloperEvaluation.Functional.Tests.Sales
 
             var command = new CreateSaleCommand
             {
-                SalesDate = DateTime.UtcNow,
-                TotalOfSale = saleItems.Sum(x => x.Quantity * x.UnitPrice),
+                SalesDate = DateTime.Now,
+                TotalOfSale = saleItems.Sum(x => (x.UnitPrice * x.Quantity) - x.Discount), // Calcular TotalOfSale
                 CustomerId = Guid.NewGuid(),
                 SubsidiaryId = Guid.NewGuid(),
                 SaleItems = saleItems,
@@ -94,7 +101,8 @@ namespace Ambev.DeveloperEvaluation.Functional.Tests.Sales
                     Id = Guid.NewGuid(),
                     Product = new Product { Id = si.ProductId },
                     Quantity = si.Quantity,
-                    UnitPrice = si.UnitPrice
+                    UnitPrice = si.UnitPrice,
+                    Discount = si.Discount
                 }).ToList()
             };
 
@@ -110,10 +118,14 @@ namespace Ambev.DeveloperEvaluation.Functional.Tests.Sales
             saleRepository
                 .GetByIdAsync(testData.CreatedSale.Id, Arg.Any<CancellationToken>())
                 .Returns(testData.CreatedSale);
+
+            saleRepository
+                .GetAllAsync(Arg.Any<Guid?>(), Arg.Any<int>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
+                .Returns(new List<Sale> { testData.CreatedSale });
         }
 
         private static async Task<CreateSaleResult> ExecuteCreateSaleCommand(
-            IMediator mediator, 
+            IMediator mediator,
             CreateSaleCommand command)
         {
             var result = await mediator.Send(command);
@@ -121,17 +133,16 @@ namespace Ambev.DeveloperEvaluation.Functional.Tests.Sales
             return result;
         }
 
-        private static async Task<GetSaleByIdResult> ExecuteGetSaleCommand(
-            IMediator mediator, 
-            Guid saleId)
+        private static async Task<GetSaleResult> ExecuteGetSaleCommand(IMediator mediator, Guid saleId)
         {
-            var result = await mediator.Send(new GetSaleByIdCommand { SaleId = saleId });
+            var results = await mediator.Send(new GetSaleCommand { SalesId = saleId, PageNumber = 1, PageSize = 1 });
+            var result = results.FirstOrDefault();
             result.Should().NotBeNull();
             return result;
         }
 
         private static void ValidateTestResults(
-            GetSaleByIdResult getResult, 
+            GetSaleResult getResult,
             TestData testData,
             ISaleRepository saleRepository)
         {
@@ -141,13 +152,15 @@ namespace Ambev.DeveloperEvaluation.Functional.Tests.Sales
             getResult.Customer.Id.Should().Be(testData.CreateCommand.CustomerId);
             getResult.Subsidiary.Id.Should().Be(testData.CreateCommand.SubsidiaryId);
             getResult.IsCanceled.Should().Be(testData.CreateCommand.IsCanceled);
-            
+
             getResult.SaleItems.Should().HaveCount(testData.SaleItems.Count);
-            getResult.SaleItems.Should().BeEquivalentTo(testData.SaleItems, 
-                options => options.ComparingByMembers<SaleItemDto>());
+            getResult.SaleItems.Should().BeEquivalentTo(testData.SaleItems,
+                options => options.ComparingByMembers<SaleItemDto>()
+                                  .Including(si => si.Discount)
+                                  .Including(si => si.TotalAmount));
 
             saleRepository.Received(1)
-                .CreateAsync(Arg.Is<Sale>(s => 
+                .CreateAsync(Arg.Is<Sale>(s =>
                     s.Customer.Id == testData.CreateCommand.CustomerId &&
                     s.Subsidiary.Id == testData.CreateCommand.SubsidiaryId &&
                     s.TotalOfSale == testData.CreateCommand.TotalOfSale

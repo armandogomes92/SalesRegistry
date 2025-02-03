@@ -9,30 +9,30 @@ using Ambev.DeveloperEvaluation.Application.Sales.CreateSale;
 using Ambev.DeveloperEvaluation.Application.Sales.UpdateSale;
 using Ambev.DeveloperEvaluation.Application.Sales.DeleteSale;
 using Ambev.DeveloperEvaluation.Application.Dtos;
-using Ambev.DeveloperEvaluation.Domain.Services;
+using MediatR;
 
 namespace Ambev.DeveloperEvaluation.Unit.Tests.Sales
 {
     public class SalesFlowUnitTests
     {
         private readonly ISaleRepository _saleRepository;
-        private readonly ISaleService _saleService;
         private readonly IMapper _mapper;
+        private readonly IMediator _mediator;
         private readonly Faker _faker;
-        private readonly Sale _fakeSale;
+        private readonly DeveloperEvaluation.Domain.Entities.Sale _fakeSale;
         private readonly List<SaleItemDto> _fakeSaleItems;
 
         public SalesFlowUnitTests()
         {
             _saleRepository = Substitute.For<ISaleRepository>();
-            _saleService = Substitute.For<ISaleService>();
-            
+            _mediator = Substitute.For<IMediator>();
+
             var config = new MapperConfiguration(cfg => {
                 cfg.AddProfile<CreateSaleProfile>();
                 cfg.AddProfile<UpdateSaleProfile>();
                 cfg.CreateMap<SaleItemDto, SaleItem>().ReverseMap();
-                cfg.CreateMap<CreateSaleCommand, Sale>();
-                cfg.CreateMap<Sale, CreateSaleResult>();
+                cfg.CreateMap<CreateSaleCommand, DeveloperEvaluation.Domain.Entities.Sale>();
+                cfg.CreateMap<DeveloperEvaluation.Domain.Entities.Sale, CreateSaleResult>();
             });
             
             _mapper = config.CreateMapper();
@@ -49,7 +49,7 @@ namespace Ambev.DeveloperEvaluation.Unit.Tests.Sales
                 }
             };
 
-            _fakeSale = new Sale
+            _fakeSale = new DeveloperEvaluation.Domain.Entities.Sale
             {
                 Id = Guid.NewGuid(),
                 SalesDate = DateTime.UtcNow,
@@ -64,10 +64,10 @@ namespace Ambev.DeveloperEvaluation.Unit.Tests.Sales
         public async Task Should_CreateSale_Successfully()
         {
             _saleRepository
-                .CreateAsync(Arg.Any<Sale>(), Arg.Any<CancellationToken>())
+                .CreateAsync(Arg.Any<DeveloperEvaluation.Domain.Entities.Sale>(), Arg.Any<CancellationToken>())
                 .Returns(_fakeSale);
 
-            var handler = new CreateSaleHandler(_saleRepository, _mapper, _saleService);
+            var handler = new CreateSaleHandler(_saleRepository, _mapper, _mediator);
             var command = new CreateSaleCommand 
             {
                 SalesDate = DateTime.Now,
@@ -83,7 +83,7 @@ namespace Ambev.DeveloperEvaluation.Unit.Tests.Sales
             result.Id.Should().NotBeEmpty();
             await _saleRepository
                 .Received(1)
-                .CreateAsync(Arg.Is<Sale>(s => 
+                .CreateAsync(Arg.Is<DeveloperEvaluation.Domain.Entities.Sale>(s => 
                     s.Customer.Id == command.CustomerId && 
                     s.TotalOfSale == command.TotalOfSale
                 ), Arg.Any<CancellationToken>());
@@ -92,7 +92,7 @@ namespace Ambev.DeveloperEvaluation.Unit.Tests.Sales
         [Fact]
         public async Task Should_ThrowException_WhenCreatingSaleWithInvalidData()
         {
-            var handler = new CreateSaleHandler(_saleRepository, _mapper, _saleService);
+            var handler = new CreateSaleHandler(_saleRepository, _mapper, _mediator);
             var invalidCommand = new CreateSaleCommand
             {
                 SalesDate = DateTime.UtcNow,
@@ -106,7 +106,7 @@ namespace Ambev.DeveloperEvaluation.Unit.Tests.Sales
             await act.Should().ThrowAsync<FluentValidation.ValidationException>();
             await _saleRepository
                 .DidNotReceive()
-                .CreateAsync(Arg.Any<Sale>(), Arg.Any<CancellationToken>());
+                .CreateAsync(Arg.Any<DeveloperEvaluation.Domain.Entities.Sale>(), Arg.Any<CancellationToken>());
         }
 
         [Fact]
@@ -116,10 +116,10 @@ namespace Ambev.DeveloperEvaluation.Unit.Tests.Sales
             var updatedProducts = new List<string> { _faker.Commerce.ProductName() };
             
             _saleRepository.GetByIdAsync(saleId)
-                .Returns(new Sale { Id = saleId });
-            _saleRepository.UpdateAsync(Arg.Any<Sale>()).Returns(true);
+                .Returns(new DeveloperEvaluation.Domain.Entities.Sale { Id = saleId });
+            _saleRepository.UpdateAsync(Arg.Any<DeveloperEvaluation.Domain.Entities.Sale>()).Returns(true);
 
-            var handler = new UpdateSaleHandler(_saleRepository, _mapper, _saleService);
+            var handler = new UpdateSaleHandler(_saleRepository, _mapper, _mediator);
             var command = new UpdateSaleCommand
             {
                 Id = saleId,
@@ -134,8 +134,8 @@ namespace Ambev.DeveloperEvaluation.Unit.Tests.Sales
 
             var result = await handler.Handle(command, CancellationToken.None);
 
-            result.Id.Should().Be(saleId);
-            await _saleRepository.Received(1).UpdateAsync(Arg.Any<Sale>());
+            result.IsUpdated.Should().BeTrue();
+            await _saleRepository.Received(1).UpdateAsync(Arg.Any<DeveloperEvaluation.Domain.Entities.Sale>());
         }
 
         [Fact]

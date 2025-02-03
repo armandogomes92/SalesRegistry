@@ -1,11 +1,11 @@
-﻿using Ambev.DeveloperEvaluation.Domain.Entities;
+using Ambev.DeveloperEvaluation.Application.Dtos;
 
-namespace Ambev.DeveloperEvaluation.Application.Sales.GetSale.ById;
+namespace Ambev.DeveloperEvaluation.Application.Sales.GetSale;
 
-public class GetSaleByIdResult
+public class GetSaleResult
 {
     /// <summary>
-    /// Gets or sets the sale.
+    /// Gets or sets the sales.
     /// </summary>
     public Guid Id { get; set; }
 
@@ -27,20 +27,20 @@ public class GetSaleByIdResult
     /// <summary>
     /// Gets or sets a value indicating whether the sale is canceled.
     /// </summary>
-    public bool IsCanceled { get;    }
+    public bool IsCanceled { get; set; }
 
     /// <summary>
     /// Gets or sets the items included in the sale.
     /// </summary>
-    public List<SaleItem> SaleItems { get; set; } = new List<SaleItem>();
+    public List<SaleItemResponseDto> SaleItems { get; set; }
 
     /// <summary>
     /// Gets or sets the customer associated with the sale.
     /// </summary>
-    public Customer Customer { get; set; }
+    public CustomerDto Customer { get; set; }
 
     /// <summary>
     /// Gets or sets the subsidiary where the sale was made.
     /// </summary>
-    public Subsidiary Subsidiary { get; set; }
+    public SubsidiaryDto Subsidiary { get; set; }
 }

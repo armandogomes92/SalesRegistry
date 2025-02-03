@@ -73,7 +73,7 @@ namespace Ambev.DeveloperEvaluation.Integration.Tests.Sales
 
         private async Task SeedTestDataAsync()
         {
-            var customer = new Customer 
+            var customer = new Customer
             {
                 Id = Guid.NewGuid(),
                 MainName = _faker.Person.FullName,
@@ -83,7 +83,7 @@ namespace Ambev.DeveloperEvaluation.Integration.Tests.Sales
                 CreatedAt = DateTime.UtcNow
             };
 
-            var subsidiary = new Subsidiary 
+            var subsidiary = new Subsidiary
             {
                 Id = Guid.NewGuid(),
                 Name = _faker.Company.CompanyName(),
@@ -93,8 +93,19 @@ namespace Ambev.DeveloperEvaluation.Integration.Tests.Sales
                 CreatedAt = DateTime.UtcNow
             };
 
+            var product = new Product
+            {
+                Id = Guid.NewGuid(),
+                Title = _faker.Commerce.ProductName(),
+                Price = _faker.Random.Decimal(10, 100),
+                Description = _faker.Commerce.ProductDescription(),
+                Category = _faker.Commerce.Categories(1).First(),
+                RateAverage = _faker.Random.Decimal(1, 5),
+            };
+
             Context.Customers.Add(customer);
             Context.Subsidiaries.Add(subsidiary);
+            Context.Products.Add(product);
             await Context.SaveChangesAsync();
         }
 
@@ -102,6 +113,7 @@ namespace Ambev.DeveloperEvaluation.Integration.Tests.Sales
         {
             var customer = await Context.Customers.FirstAsync();
             var subsidiary = await Context.Subsidiaries.FirstAsync();
+            var product = await Context.Products.FirstAsync();
 
             return new Sale
             {
@@ -109,15 +121,15 @@ namespace Ambev.DeveloperEvaluation.Integration.Tests.Sales
                 Customer = new Customer { Id = customer.Id },
                 Subsidiary = new Subsidiary { Id = subsidiary.Id },
                 SaleItems = new List<SaleItem>
+            {
+                new()
                 {
-                    new()
-                    {
-                        Id = Guid.NewGuid(),
-                        Product = new Product { Id = Guid.NewGuid() },
-                        Quantity = _faker.Random.Number(1, 10),
-                        UnitPrice = _faker.Random.Decimal(10, 100)
-                    }
-                },
+                    Id = Guid.NewGuid(),
+                    Product = new Product { Id = product.Id },
+                    Quantity = _faker.Random.Number(1, 10),
+                    UnitPrice = product.Price
+                }
+            },
                 IsCanceled = false
             };
         }

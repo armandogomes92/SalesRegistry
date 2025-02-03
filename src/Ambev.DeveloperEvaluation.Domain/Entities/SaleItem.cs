@@ -31,4 +31,22 @@ public class SaleItem : BaseEntity
     /// Gets or sets the total amount for this sale item.
     /// </summary>
     public decimal TotalAmount => (UnitPrice * Quantity) - Discount;
+
+    /// <summary>
+    /// Applies discount based on the quantity of the product sold.
+    /// </summary>
+    public void ApplyDiscount()
+    {
+        if (Quantity > 20)
+            throw new InvalidOperationException("Cannot sell more than 20 identical items.");
+
+        if (Quantity < 4)
+        {
+            Discount = 0;
+            return;
+        }
+        var quantityDiscount = Quantity >= 10 ? 0.2m : 0.1m;
+
+        Discount = Quantity * UnitPrice * quantityDiscount;
+    }
 }

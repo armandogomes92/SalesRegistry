@@ -24,12 +24,27 @@ public class SaleRepository : ISaleRepository
     /// <summary>
     /// Retrieves all sales from the database including related entities
     /// </summary>
+    /// <param name="salesId">Optional sales ID to filter by</param>
+    /// <param name="pageNumber">Page number for pagination</param>
+    /// <param name="pageSize">Page size for pagination</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>A list of sales</returns>
-    public async Task<List<Sale>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<List<Sale>> GetAllAsync(Guid? salesId, int pageNumber, int pageSize, CancellationToken cancellationToken = default)
     {
-        return await _context.Sales
-            .AsNoTracking()
+        var query = _context.Sales.AsNoTracking();
+
+        if (salesId.HasValue)
+        {
+            query = query.Where(s => s.Id == salesId.Value);
+        }
+
+        // Apply pagination if pageNumber and pageSize are valid
+        if (pageNumber > 0 && pageSize > 0)
+        {
+            query = query.Skip((pageNumber - 1) * pageSize).Take(pageSize);
+        }
+
+        return await query
             .Select(s => new Sale
             {
                 Id = s.Id,
@@ -135,9 +150,8 @@ public class SaleRepository : ISaleRepository
         var sale = await GetByIdAsync(id, cancellationToken);
         if (sale == null)
             return false;
+        sale.IsCanceled = true;
 
-        _context.Sales.Remove(sale);
-        await _context.SaveChangesAsync(cancellationToken);
-        return true;
+        return await UpdateAsync(sale);
     }
 }

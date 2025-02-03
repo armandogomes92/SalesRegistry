@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Ambev.DeveloperEvaluation.Application.Sales.GetSale;
-using Ambev.DeveloperEvaluation.Application.Sales.GetSale.ById;
+using Ambev.DeveloperEvaluation.Application.Dtos;
+using Ambev.DeveloperEvaluation.Domain.Entities;
 
 namespace Ambev.DeveloperEvaluation.WebApi.Features.Sales.GetSale
 {
@@ -14,7 +15,16 @@ namespace Ambev.DeveloperEvaluation.WebApi.Features.Sales.GetSale
         /// </summary>
         public GetSaleProfile()
         {
-            CreateMap<Guid, GetSaleByIdCommand>();
+            CreateMap<GetSaleRequest, GetSaleCommand>();
+            CreateMap<GetSaleResult, GetSaleResponse>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id));
+            CreateMap<Product, ProductDto>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id));
+            CreateMap<SaleItem, SaleItemResponseDto>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id));
+            CreateMap<SaleItemResponseDto, SaleItemDto>();
+            CreateMap<Customer, CustomerDto>();
+            CreateMap<Subsidiary, SubsidiaryDto>();
         }
     }
 }

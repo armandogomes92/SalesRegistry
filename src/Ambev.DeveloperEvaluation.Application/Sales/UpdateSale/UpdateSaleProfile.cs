@@ -12,8 +12,8 @@ namespace Ambev.DeveloperEvaluation.Application.Sales.UpdateSale
     {
         public UpdateSaleProfile()
         {
-            CreateMap<UpdateSaleCommand, Sale>();
-            CreateMap<Sale, UpdateSaleResult>();
+            CreateMap<UpdateSaleCommand, Domain.Entities.Sale>();
+            CreateMap<UpdateSaleResult, UpdateSaleResult>();
         }
     }
 }

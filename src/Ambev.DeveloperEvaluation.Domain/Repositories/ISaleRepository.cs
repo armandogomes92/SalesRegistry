@@ -10,9 +10,12 @@ public interface ISaleRepository
     /// <summary>
     /// Retrieves all sales from the repository
     /// </summary>
+    /// <param name="salesId">Optional sales identifier for filtering</param>
+    /// <param name="pageNumber">Page number for pagination</param>
+    /// <param name="pageSize">Page size for pagination</param>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>A list of sales</returns>
-    Task<List<Sale>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<List<Sale>> GetAllAsync(Guid? salesId, int pageNumber, int pageSize, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Retrieves a sale by its unique identifier
