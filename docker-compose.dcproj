@@ -15,5 +15,7 @@
     </None>
     <None Include="docker-compose.yml" />
     <None Include=".dockerignore" />
+    <None Include="src\Ambev.DeveloperEvaluation.Application\Sales\Events\SaleEventHandler.cs" />
+    <None Include="src\Ambev.DeveloperEvaluation.Domain\Events\SaleCreatedEvent.cs" />
   </ItemGroup>
 </Project>
